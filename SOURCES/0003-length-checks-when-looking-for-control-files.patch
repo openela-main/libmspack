@@ -1,0 +1,56 @@
+From e50806b8d3eb2af019def3fa932e7edf602ce51f Mon Sep 17 00:00:00 2001
+From: Stuart Caie <kyzer@cabextract.org.uk>
+Date: Mon, 18 Feb 2019 13:04:58 +0000
+Subject: [PATCH 3/3] length checks when looking for control files
+
+(cherry picked from commit 2f084136cfe0d05e5bf5703f3e83c6d955234b4d)
+---
+ libmspack/mspack/chmd.c | 32 +++++++++++++++-----------------
+ 1 file changed, 15 insertions(+), 17 deletions(-)
+
+diff --git a/libmspack/mspack/chmd.c b/libmspack/mspack/chmd.c
+index 1d198bf..4c46db8 100644
+--- a/libmspack/mspack/chmd.c
++++ b/libmspack/mspack/chmd.c
+@@ -482,23 +482,21 @@ static int chmd_read_headers(struct mspack_system *sys, struct mspack_file *fh,
+       fi->filename[name_len] = '\0';
+ 
+       if (name[0] == ':' && name[1] == ':') {
+-	/* system file */
+-	if (mspack_memcmp(&name[2], &content_name[2], 31L) == 0) {
+-	  if (mspack_memcmp(&name[33], &content_name[33], 8L) == 0) {
+-	    chm->sec1.content = fi;
+-	  }
+-	  else if (mspack_memcmp(&name[33], &control_name[33], 11L) == 0) {
+-	    chm->sec1.control = fi;
+-	  }
+-	  else if (mspack_memcmp(&name[33], &spaninfo_name[33], 8L) == 0) {
+-	    chm->sec1.spaninfo = fi;
+-	  }
+-	  else if (mspack_memcmp(&name[33], &rtable_name[33], 72L) == 0) {
+-	    chm->sec1.rtable = fi;
+-	  }
+-	}
+-	fi->next = chm->sysfiles;
+-	chm->sysfiles = fi;
++        /* system file */
++        if (name_len == 40 && mspack_memcmp(name, content_name, 40) == 0) {
++          chm->sec1.content = fi;
++        }
++        else if (name_len == 44 && mspack_memcmp(name, control_name, 44) == 0) {
++          chm->sec1.control = fi;
++        }
++        else if (name_len == 41 && mspack_memcmp(name, spaninfo_name, 41) == 0) {
++          chm->sec1.spaninfo = fi;
++        }
++        else if (name_len == 105 && mspack_memcmp(name, rtable_name, 105) == 0) {
++          chm->sec1.rtable = fi;
++        }
++        fi->next = chm->sysfiles;
++        chm->sysfiles = fi;
+       }
+       else {
+ 	/* normal file */
+-- 
+2.22.0
+
